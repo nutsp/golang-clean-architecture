@@ -7,7 +7,7 @@ help:
 ## run: run for running app on local
 .PHONY: run
 run:
-	@go run cmd/main.go
+	@go run cmd/api/main.go
 
 .PHONY: mocks
 mocks:

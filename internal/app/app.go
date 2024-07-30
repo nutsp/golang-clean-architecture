@@ -62,6 +62,5 @@ func (app *App) Run() error {
 		app.echo.Shutdown(ctx)
 	}()
 
-	fmt.Println(app.config.Server.Port)
 	return app.echo.Start(fmt.Sprintf(":%s", app.config.Server.Port))
 }
