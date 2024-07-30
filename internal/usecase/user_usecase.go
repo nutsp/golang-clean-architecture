@@ -8,6 +8,7 @@ import (
 	"github.com/nutsp/golang-clean-architecture/internal/models"
 	"github.com/nutsp/golang-clean-architecture/internal/repositories"
 	appError "github.com/nutsp/golang-clean-architecture/pkg/apperror"
+	"github.com/nutsp/golang-clean-architecture/pkg/observability"
 	"go.uber.org/dig"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,18 +20,21 @@ type IUserUsecase interface {
 }
 
 type UserUsecase struct {
+	logger           observability.Logger
 	userRepository   repositories.IUserRepository
 	mailerRepository repositories.IMailerRepository
 }
 
 type UserUsecaseDependencies struct {
 	dig.In
+	Logger           observability.Logger           `name:"Logger"`
 	UserRepository   repositories.IUserRepository   `name:"UserRepository"`
 	MailerRepository repositories.IMailerRepository `name:"MailerRepository"`
 }
 
 func NewUserUsecase(deps UserUsecaseDependencies) *UserUsecase {
 	return &UserUsecase{
+		logger:           deps.Logger,
 		userRepository:   deps.UserRepository,
 		mailerRepository: deps.MailerRepository,
 	}
@@ -90,6 +94,5 @@ func (s *UserUsecase) GetUserInfo(ctx context.Context, id uint) (*models.User, e
 	if err != nil {
 		return nil, appError.InternalServerError(err)
 	}
-
 	return user, nil
 }

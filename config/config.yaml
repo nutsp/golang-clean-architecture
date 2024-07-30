@@ -18,6 +18,9 @@ Database:
   User: root
   Password: 1234
 
+Logger:
+  Mode: production
+
 Authentication:
   Key: DoWithLogic!@#
 

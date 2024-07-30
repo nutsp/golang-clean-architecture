@@ -15,6 +15,7 @@ type (
 		Server         ServerConfig
 		Database       DatabaseConfig
 		HttpClient     HttpClient
+		Logger         Logger
 		Authentication AuthenticationConfig
 		Observability  ObservabilityConfig
 		JWT            JWTConfig
@@ -46,6 +47,10 @@ type (
 	}
 
 	HttpClient struct {
+	}
+
+	Logger struct {
+		Mode string
 	}
 
 	AuthenticationConfig struct {

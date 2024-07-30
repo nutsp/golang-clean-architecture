@@ -12,26 +12,31 @@ import (
 	"github.com/nutsp/golang-clean-architecture/config"
 	"github.com/nutsp/golang-clean-architecture/internal/handlers"
 	"github.com/nutsp/golang-clean-architecture/internal/middlewares"
+	"github.com/nutsp/golang-clean-architecture/pkg/observability"
 	"go.uber.org/dig"
 )
 
 type App struct {
 	echo        *echo.Echo
 	config      *config.Config
+	logger      observability.Logger
+	middleware  middlewares.IMiddleware
 	userHandler handlers.IUserHandler
 }
 
 type AppDependencies struct {
 	dig.In
 	Config      *config.Config
-	UserHandler handlers.IUserHandler `name:"UserHandler"`
+	Logger      observability.Logger    `name:"Logger"`
+	Middleware  middlewares.IMiddleware `name:"Middleware"`
+	UserHandler handlers.IUserHandler   `name:"UserHandler"`
 }
 
 func NewApp(deps AppDependencies) {
-	fmt.Println("NewApp")
 	app := &App{
-		echo:        middlewares.NewEchoServer(deps.Config),
+		echo:        middlewares.NewEchoServer(deps.Config, deps.Middleware),
 		config:      deps.Config,
+		middleware:  deps.Middleware,
 		userHandler: deps.UserHandler,
 	}
 	app.Start()
@@ -56,5 +61,7 @@ func (app *App) Run() error {
 
 		app.echo.Shutdown(ctx)
 	}()
+
+	fmt.Println(app.config.Server.Port)
 	return app.echo.Start(fmt.Sprintf(":%s", app.config.Server.Port))
 }

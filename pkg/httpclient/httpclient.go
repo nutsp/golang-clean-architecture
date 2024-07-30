@@ -46,7 +46,7 @@ type Client struct {
 	client *http.Client
 }
 
-func NewClient(cfg *config.Config) *Client {
+func NewClient(cfg config.HttpClient) *Client {
 	return &Client{
 		client: &http.Client{},
 	}

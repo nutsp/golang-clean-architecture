@@ -22,10 +22,11 @@ var configCors = echoMiddleware.CORSConfig{
 	AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete, http.MethodPatch},
 }
 
-func NewEchoServer(cfg *config.Config) *echo.Echo {
+func NewEchoServer(cfg *config.Config, mw IMiddleware) *echo.Echo {
 	e := echo.New()
 
 	e.Use(echoMiddleware.CORSWithConfig(configCors))
+	e.Use(mw.LoggingMiddleware())
 
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.HTTPErrorHandler = errorHandler

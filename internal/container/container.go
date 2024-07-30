@@ -5,9 +5,11 @@ import (
 	"github.com/nutsp/golang-clean-architecture/internal/app"
 	"github.com/nutsp/golang-clean-architecture/internal/handlers"
 	"github.com/nutsp/golang-clean-architecture/internal/infastructure/database"
+	"github.com/nutsp/golang-clean-architecture/internal/middlewares"
 	"github.com/nutsp/golang-clean-architecture/internal/repositories"
 	"github.com/nutsp/golang-clean-architecture/internal/usecase"
 	httpClient "github.com/nutsp/golang-clean-architecture/pkg/httpclient"
+	"github.com/nutsp/golang-clean-architecture/pkg/observability"
 	"go.uber.org/dig"
 )
 
@@ -46,14 +48,28 @@ func (cn *Container) Configure() {
 			Constructor: config.NewLoadConfig,
 		},
 		{
+			Constructor: func(cfg *config.Config) *observability.ZapLogger {
+				return observability.NewZapLogger(cfg.Logger)
+			},
+			Interface: new(observability.Logger),
+			Token:     "Logger",
+		},
+		{
+			Constructor: func(cfg *config.Config) *httpClient.Client {
+				return httpClient.NewClient(cfg.HttpClient)
+			},
+			Interface: new(httpClient.IClient),
+			Token:     "HttpClient",
+		},
+		{
 			Constructor: database.NewDatabase,
 			Interface:   new(database.IDatabase),
 			Token:       "Database",
 		},
 		{
-			Constructor: httpClient.NewClient,
-			Interface:   new(httpClient.IClient),
-			Token:       "HttpClient",
+			Constructor: middlewares.NewMiddleware,
+			Interface:   new(middlewares.IMiddleware),
+			Token:       "Middleware",
 		},
 		{
 			Constructor: repositories.NewMailerRepository,
