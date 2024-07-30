@@ -6,3 +6,11 @@ type User struct {
 	Email    string `gorm:"column:email"`
 	Password string `gorm:"column:pass"`
 }
+
+func (User) TableName() string {
+	return "users"
+}
+
+func (u *User) IsNil() bool {
+	return u == nil
+}

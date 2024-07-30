@@ -15,10 +15,11 @@ import (
 
 type UserServiceTestSuite struct {
 	suite.Suite
-	ctrl           *gomock.Controller
-	mockUserRepo   *mocks.MockIUserRepository
-	mockMailerRepo *mocks.MockIMailerRepository
-	userService    *usecase.UserUsecase
+	ctrl              *gomock.Controller
+	mockUserRepo      *mocks.MockIUserRepository
+	mockMailerRepo    *mocks.MockIMailerRepository
+	mockUserRedisRepo *mocks.MockIUserRedisRepository
+	userService       *usecase.UserUsecase
 }
 
 func (s *UserServiceTestSuite) SetupTest() {
@@ -26,10 +27,12 @@ func (s *UserServiceTestSuite) SetupTest() {
 
 	s.mockUserRepo = mocks.NewMockIUserRepository(s.ctrl)
 	s.mockMailerRepo = mocks.NewMockIMailerRepository(s.ctrl)
+	s.mockUserRedisRepo = mocks.NewMockIUserRedisRepository(s.ctrl)
 
 	userDeps := usecase.UserUsecaseDependencies{
-		UserRepository:   s.mockUserRepo,
-		MailerRepository: s.mockMailerRepo,
+		UserRepository:      s.mockUserRepo,
+		MailerRepository:    s.mockMailerRepo,
+		UserRedisRepository: s.mockUserRedisRepo,
 	}
 
 	s.userService = usecase.NewUserUsecase(userDeps)
@@ -45,6 +48,7 @@ func TestUserServiceTestSuite(t *testing.T) {
 
 func (s *UserServiceTestSuite) TestCreateUser() {
 	user := &models.User{
+		ID:       1,
 		Name:     "John Doe",
 		Email:    "test@example.com",
 		Password: "password",
@@ -83,6 +87,7 @@ func (s *UserServiceTestSuite) TestCreateUser() {
 			if tt.emailAvailable {
 				s.mockUserRepo.EXPECT().Save(ctx, user).Return(tt.saveErr)
 			}
+			s.mockUserRedisRepo.EXPECT().SetUser(ctx, user).Return(nil).AnyTimes()
 
 			err := s.userService.CreateUser(ctx, user)
 

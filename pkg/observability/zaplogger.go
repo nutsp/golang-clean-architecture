@@ -1,7 +1,7 @@
 package observability
 
 import (
-	"time"
+	"os"
 
 	"github.com/nutsp/golang-clean-architecture/config"
 	"go.uber.org/zap"
@@ -26,57 +26,51 @@ type (
 )
 
 func NewZapLogger(cfg config.Logger) *ZapLogger {
-	var config zap.Config
+
+	var encoder zapcore.Encoder
+	var config zapcore.EncoderConfig
 
 	if cfg.Mode == Development {
-		config = zap.Config{
-			Level:       zap.NewAtomicLevelAt(zapcore.DebugLevel),
-			Development: true,
-			Encoding:    "console",
-			EncoderConfig: zapcore.EncoderConfig{
-				TimeKey:        "time",
-				LevelKey:       "level",
-				NameKey:        "logger",
-				CallerKey:      "caller",
-				MessageKey:     "msg",
-				StacktraceKey:  "stacktrace",
-				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.CapitalColorLevelEncoder, // Capital level with color
-				EncodeTime:     zapcore.ISO8601TimeEncoder,       // ISO8601 UTC time format
-				EncodeDuration: zapcore.StringDurationEncoder,
-				EncodeCaller:   zapcore.ShortCallerEncoder,
-			},
-			OutputPaths:      []string{"stdout"},
-			ErrorOutputPaths: []string{"stderr"},
+		config = zapcore.EncoderConfig{
+			// Keys can be anything except the empty string.
+			TimeKey:        "time",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "msg",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
 		}
 	} else {
-		config = zap.Config{
-			Level:       zap.NewAtomicLevelAt(zapcore.InfoLevel),
-			Development: false,
-			Encoding:    "json",
-			EncoderConfig: zapcore.EncoderConfig{
-				TimeKey:        "time",
-				LevelKey:       "level",
-				NameKey:        "logger",
-				CallerKey:      "caller",
-				MessageKey:     "msg",
-				StacktraceKey:  "stacktrace",
-				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.LowercaseLevelEncoder,             // Lowercase log level
-				EncodeTime:     zapcore.TimeEncoderOfLayout(time.RFC3339), // Custom time format
-				EncodeDuration: zapcore.StringDurationEncoder,
-				EncodeCaller:   zapcore.ShortCallerEncoder,
-			},
-			OutputPaths:      []string{"stdout"},
-			ErrorOutputPaths: []string{"stderr"},
+		config = zapcore.EncoderConfig{
+			TimeKey:        "time",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "msg",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
 		}
 	}
 
-	zapLogger, err := config.Build()
-	if err != nil {
-		panic(err)
+	if cfg.Encoding == "console" {
+		encoder = zapcore.NewConsoleEncoder(config)
+	} else {
+		encoder = zapcore.NewJSONEncoder(config)
 	}
-	defer zapLogger.Sync() // flushes buffer, if any
+
+	core := zapcore.NewCore(encoder, zapcore.AddSync(os.Stderr), zap.NewAtomicLevelAt(zapcore.DebugLevel))
+	zapLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	sugaredLogger := zapLogger.Sugar()
 	return &ZapLogger{

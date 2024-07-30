@@ -14,6 +14,7 @@ mocks:
 	mockgen -source internal/usecase/user_usecase.go -destination internal/mocks/user_usecase_mock.go -package=mocks
 	mockgen -source internal/repositories/user_repository.go -destination internal/mocks/user_repository_mock.go -package=mocks
 	mockgen -source internal/repositories/mailer_repository.go -destination internal/mocks/mailer_repository_mock.go -package=mocks
+	mockgen -source internal/repositories/user_redis_repository.go -destination internal/mocks/user_redis_repository_mock.go -package=mocks
 
 mock-httpclient:
 	mockgen -source pkg/httpclient/httpclient.go -destination pkg/httpclient/mock/httpclient_mock.go -package=mock_httpclient

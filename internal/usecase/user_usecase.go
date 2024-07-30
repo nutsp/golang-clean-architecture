@@ -20,23 +20,26 @@ type IUserUsecase interface {
 }
 
 type UserUsecase struct {
-	logger           observability.Logger
-	userRepository   repositories.IUserRepository
-	mailerRepository repositories.IMailerRepository
+	logger              observability.Logger
+	userRepository      repositories.IUserRepository
+	mailerRepository    repositories.IMailerRepository
+	userRedisRepository repositories.IUserRedisRepository
 }
 
 type UserUsecaseDependencies struct {
 	dig.In
-	Logger           observability.Logger           `name:"Logger"`
-	UserRepository   repositories.IUserRepository   `name:"UserRepository"`
-	MailerRepository repositories.IMailerRepository `name:"MailerRepository"`
+	Logger              observability.Logger              `name:"Logger"`
+	UserRepository      repositories.IUserRepository      `name:"UserRepository"`
+	MailerRepository    repositories.IMailerRepository    `name:"MailerRepository"`
+	UserRedisRepository repositories.IUserRedisRepository `name:"UserRedisRepository"`
 }
 
 func NewUserUsecase(deps UserUsecaseDependencies) *UserUsecase {
 	return &UserUsecase{
-		logger:           deps.Logger,
-		userRepository:   deps.UserRepository,
-		mailerRepository: deps.MailerRepository,
+		logger:              deps.Logger,
+		userRepository:      deps.UserRepository,
+		mailerRepository:    deps.MailerRepository,
+		userRedisRepository: deps.UserRedisRepository,
 	}
 }
 
@@ -65,6 +68,9 @@ func (s *UserUsecase) CreateUser(ctx context.Context, user *models.User) error {
 		return appError.InternalServerError(err)
 	}
 
+	if err := s.userRedisRepository.SetUser(ctx, user); err != nil {
+		return appError.InternalServerError(err)
+	}
 	return nil
 }
 
@@ -90,9 +96,19 @@ func (s *UserUsecase) UpdateUserInfo(ctx context.Context, user *models.User) err
 }
 
 func (s *UserUsecase) GetUserInfo(ctx context.Context, id uint) (*models.User, error) {
-	user, err := s.userRepository.GetByID(ctx, id)
+	user, err := s.userRedisRepository.GetUser(ctx, id)
 	if err != nil {
 		return nil, appError.InternalServerError(err)
 	}
+
+	if user.IsNil() {
+		user, err := s.userRepository.GetByID(ctx, id)
+		if err != nil {
+			return nil, appError.InternalServerError(err)
+		}
+		s.logger.Info("GetUserInfo", "user", user)
+		return user, nil
+	}
+	s.logger.Info("GetUserInfo", "user", user)
 	return user, nil
 }

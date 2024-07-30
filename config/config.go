@@ -16,6 +16,7 @@ type (
 		Database       DatabaseConfig
 		HttpClient     HttpClient
 		Logger         Logger
+		Redis          Redis
 		Authentication AuthenticationConfig
 		Observability  ObservabilityConfig
 		JWT            JWTConfig
@@ -50,7 +51,14 @@ type (
 	}
 
 	Logger struct {
-		Mode string
+		Mode     string
+		Encoding string
+	}
+
+	Redis struct {
+		Addr     string
+		Password string
+		DB       int
 	}
 
 	AuthenticationConfig struct {

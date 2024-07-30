@@ -18,8 +18,14 @@ Database:
   User: root
   Password: 1234
 
+Redis:
+  Addr: 127.0.0.1:6379
+  Password:
+  DB: 0
+
 Logger:
   Mode: production
+  Encoding: json
 
 Authentication:
   Key: DoWithLogic!@#

@@ -8,6 +8,7 @@ import (
 	"github.com/nutsp/golang-clean-architecture/internal/middlewares"
 	"github.com/nutsp/golang-clean-architecture/internal/repositories"
 	"github.com/nutsp/golang-clean-architecture/internal/usecase"
+	"github.com/nutsp/golang-clean-architecture/pkg/datasource"
 	httpClient "github.com/nutsp/golang-clean-architecture/pkg/httpclient"
 	"github.com/nutsp/golang-clean-architecture/pkg/observability"
 	"go.uber.org/dig"
@@ -62,6 +63,13 @@ func (cn *Container) Configure() {
 			Token:     "HttpClient",
 		},
 		{
+			Constructor: func(cfg *config.Config) *datasource.RedisClient {
+				return datasource.NewRedisClient(cfg.Redis)
+			},
+			Interface: new(datasource.IRedisClient),
+			Token:     "RedisClient",
+		},
+		{
 			Constructor: database.NewDatabase,
 			Interface:   new(database.IDatabase),
 			Token:       "Database",
@@ -75,6 +83,11 @@ func (cn *Container) Configure() {
 			Constructor: repositories.NewMailerRepository,
 			Interface:   new(repositories.IMailerRepository),
 			Token:       "MailerRepository",
+		},
+		{
+			Constructor: repositories.NewUserRedisRepository,
+			Interface:   new(repositories.IUserRedisRepository),
+			Token:       "UserRedisRepository",
 		},
 		{
 			Constructor: repositories.NewUserRepository,
